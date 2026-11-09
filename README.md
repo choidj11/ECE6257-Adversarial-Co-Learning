@@ -1,32 +1,34 @@
 # Adversarial Co-Training for Agentic Coding
 
-复现 Code-A1 的 coder–tester 对抗协同训练，并检验 branch coverage 和 selected runtime values 对测试质量与代码生成表现的影响。
+Reproduce Code-A1's adversarial coder–tester co-training and evaluate how branch coverage and selected runtime values affect test quality and code generation.
 
-- [进度与 7 周安排](progress.md)
-- [本轮实验结果与报告](FINAL_REPORT.md)（32 steps、单 seed 的受限规模实验）
-- [环境、数据、Slurm 与运行说明](ENVIRONMENT.md)
-- [W&B 训练与评测指标](https://wandb.ai/mushroom_yeren/6257-adversarial-co-training/workspace)（私有项目）
+- [Progress and seven-week plan](progress.md)
+- [Study results and final report](FINAL_REPORT.md) (resource-limited, 32 steps, one seed)
+- [Environment, data, Slurm, and operating instructions](ENVIRONMENT.md)
+- [W&B training and evaluation metrics](https://wandb.ai/mushroom_yeren/6257-adversarial-co-training/workspace) (private project)
 
-在项目根目录激活训练环境：
+Repository documentation and generated reports are maintained in English.
+
+Activate the training environment from the project root:
 
 ```bash
 source scripts/activate.sh rl
 python scripts/check_quota.py
 ```
 
-第 1–2 周的运行验证通过 Slurm 提交：
+Submit the weeks 1–2 smoke checks through Slurm:
 
 ```bash
-sbatch scripts/gpu_smoke.sbatch       # coe-gpu：单 GPU 推理
-sbatch scripts/sandbox_smoke.sbatch   # ice-cpu：Python 沙箱与隔离检查
-sbatch scripts/benchmark_smoke.sbatch # coe-gpu：三个 benchmark 各一个样例
-sbatch scripts/week12_smoke.sbatch    # coe-gpu：两个 GPU，最小协同训练更新
+sbatch scripts/gpu_smoke.sbatch       # coe-gpu: single-GPU inference
+sbatch scripts/sandbox_smoke.sbatch   # ice-cpu: Python sandbox and isolation checks
+sbatch scripts/benchmark_smoke.sbatch # coe-gpu: one example from each of three benchmarks
+sbatch scripts/week12_smoke.sbatch    # coe-gpu: two GPUs, one co-training update
 ```
 
-脚本默认使用 `account=ece`、`qos=coe-ice`，从项目根目录提交。日志与检查报告在 `artifacts/setup/`，本地训练配置由 `scripts/prepare_week12.py` 生成到 `artifacts/week12/`。运行沙箱前需已有 `.venv-sandbox` 和固定版本的上游代码，重建入口为 `bash scripts/setup_sandbox.sh`。
+Scripts default to `account=ece` and `qos=coe-ice`; submit them from the project root. Logs and check reports are stored in `artifacts/setup/`. `scripts/prepare_week12.py` writes local training configurations to `artifacts/week12/`. The sandbox requires `.venv-sandbox` and the pinned upstream code; rebuild it with `bash scripts/setup_sandbox.sh`.
 
-这些是小规模运行验证，不代表正式 benchmark 分数或完成 baseline 复现。Scratch 的 300 GiB 和 100 万文件配额由用户的所有 Scratch 目录共享；新增任务先检查配额，训练验证不保存 checkpoint。
+These smoke checks validate execution paths; they do not establish benchmark scores or complete the baseline reproduction. The 300 GiB and one-million-file Scratch quotas are shared across all of the user's Scratch directories. Check quota before new jobs; training smoke checks do not save checkpoints.
 
-本轮固定预算实验已完成：E0–E3 各 32-step 双模型训练、五模型统一评测、消融统计、图表与 W&B 数值核验。增强组的主要配对区间均包含 0，尚无稳定提升证据。范围与偏差见 [实验协议](EXPERIMENT_PROTOCOL.md)、[Code-A1 方法核对](CODE_A1_METHOD.md) 和 [结果报告](FINAL_REPORT.md)；实际任务映射在 `artifacts/study/jobs.json`。
+The fixed-budget study is complete: E0–E3 each finished 32 steps of dual-model training, followed by evaluation of five model variants, ablation statistics, figures, and W&B readback verification. The main paired intervals for the feedback variants all include zero; there is no evidence of a stable improvement in this study. See the [experiment protocol](EXPERIMENT_PROTOCOL.md), [Code-A1 implementation review](CODE_A1_METHOD.md), and [final report](FINAL_REPORT.md) for scope and deviations. Actual job IDs are recorded in `artifacts/study/jobs.json`.
 
-在已准备环境与数据的全新实验目录中，可用 `python scripts/submit_study.py` 一次性提交依赖图。已有 `jobs.json` 时脚本会拒绝重复提交；重跑须先归档本轮产物。W&B 指标监控见 [环境说明](ENVIRONMENT.md)。
+In a fresh experiment workspace with the environment and data already prepared, run `python scripts/submit_study.py` to submit the dependency graph. The script refuses to submit again if `jobs.json` exists; archive the current study before rerunning. W&B monitoring instructions are in the [environment guide](ENVIRONMENT.md).

@@ -1,32 +1,32 @@
-# Code-A1 实现核对
+# Code-A1 Implementation Review
 
-核对版本：ZJU-REAL/Code-A1 commit `be86d9315bab10a97d006aa25eb84204b25aa129`。代码入口为 `external/Code-A1/Code-A1/code/rl/main_a1.py`，本地对照配置见 `artifacts/study/E0/config.yaml`。来源为[官方仓库](https://github.com/ZJU-REAL/Code-A1)。
+Reviewed version: ZJU-REAL/Code-A1 commit `be86d9315bab10a97d006aa25eb84204b25aa129`. The entrypoint is `external/Code-A1/Code-A1/code/rl/main_a1.py`; the local baseline configuration is `artifacts/study/E0/config.yaml`. Source: [official repository](https://github.com/ZJU-REAL/Code-A1).
 
-## 实际训练路径
+## Actual training path
 
-1. `main_a1.py` 创建 coder/tester 两个资源池，分别初始化 actor/rollout 与 reference policy；继承官方定制 verl 的 FSDP2 worker。
-2. `trainer_a1.py::_dual_model_rollout` 先为每题生成多份代码，再调用 `_prepare_model_b_batch_phase2`，将题意与每份候选代码交给 tester；tester 生成断言。
-3. `reward.py` 在 Sandbox Fusion 执行接口中用参考实现检查测试有效性，再检查候选代码在有效测试及 Mistake Book 历史测试上的表现。
-4. 计算旧策略和参考策略的 log probability，构造 GRPO advantage，以官方 PPO clipped loss 和 KL loss 更新两个 actor。
-5. 保存 rollout 与 Mistake Book；本轮只在最终 step 保存两个模型的 HF 推理权重，控制磁盘占用。
+1. `main_a1.py` creates separate coder and tester resource pools, initializes their actor/rollout and reference policies, and uses the official customized verl FSDP2 workers.
+2. `trainer_a1.py::_dual_model_rollout` generates multiple code candidates per problem, then calls `_prepare_model_b_batch_phase2` to give the problem and each candidate to the tester, which generates assertions.
+3. `reward.py` uses the Sandbox Fusion execution API to validate tests against the reference implementation, then evaluates candidate code against valid new tests and historical tests in the Mistake Book.
+4. The trainer computes old-policy and reference-policy log probabilities, constructs GRPO advantages, and updates both actors with the official PPO clipped loss and KL loss.
+5. Rollouts and the Mistake Book are saved. To control storage, this study saves only the final Hugging Face inference weights for both models.
 
-## 奖励
+## Rewards
 
-当前训练数据 `data_source=kodcode_light`，使用注册为 `acg_llm` 的奖励类，`alpha=0.5`。在有效候选代码上：
+The training data uses `data_source=kodcode_light`, the reward class registered as `acg_llm`, and `alpha=0.5`. For valid candidate code:
 
-- coder 奖励是新测试通过率；如果同时存在历史攻击测试，则与历史测试通过率取平均。
-- tester 的有效性分量为 `max(0, min(1, 有效测试数/8, 1-无效测试数/8))`。
-- 无历史攻击测试时，攻击分量为候选代码在新测试上的失败数/8；存在历史攻击测试时按官方实现与历史攻击失败率组合。
-- tester 奖励为有效性与攻击分量按 `alpha` 加权；非可打印输出另有惩罚。无效代码不会获得正常有效性/攻击奖励。
+- The coder reward is the pass rate on new tests. If historical attack tests also exist, it is averaged with the pass rate on those historical tests.
+- The tester validity component is `max(0, min(1, valid_test_count/8, 1-invalid_test_count/8))`.
+- With no historical attack tests, the attack component is the number of failures on new tests divided by 8. When historical attacks exist, the official implementation combines this with the historical attack failure rate.
+- The tester reward weights validity and attack components by `alpha`; non-printable output receives an additional penalty. Invalid code does not receive the normal validity/attack reward.
 
-trainer 对每份代码对应的多个 tester 奖励作聚合，并保留方差较高的 tester 组用于更新。Mistake Book 记录曾使候选代码失败的有效测试，供后续轮次重放。不能将该实现简单描述为“对官方测试的通过率做 RL”。
+The trainer aggregates multiple tester rewards for each code candidate and retains tester groups with higher variance for updates. The Mistake Book stores valid tests that previously caused candidates to fail and replays them in later rounds. Describing this implementation simply as RL on the pass rate of official tests would omit these mechanisms.
 
-## 本轮偏差与保留项
+## Preserved mechanisms and study deviations
 
-保留奖励、Mistake Book、FSDP2、GRPO、双模型更新、KL 系数、学习率与基础模型。E0 直接运行上游 entrypoint；E1–E3 仅通过本地 subclass 扩展 tester prompt，不修改上游源码。
+The study preserves the rewards, Mistake Book, FSDP2, GRPO, dual-model updates, KL coefficient, learning rate, and base model. E0 runs the upstream entrypoint directly. E1–E3 extend only the tester prompt through a local subclass, without modifying upstream source files.
 
-受资源约束，训练由上游配置的 3 epochs、batch 256、每方 n=8、每方 4 GPU，改为 128 个固定问题、32 steps、batch 4、每方 n=2、每方 1 GPU；输出上限由 4,096 改为 1,024 tokens。正式结论限于本轮固定预算，不声称复现论文绝对分数。
+Resource limits reduce the upstream configuration of 3 epochs, batch size 256, n=8 per role, and 4 GPUs per role to 128 fixed problems, 32 steps, batch size 4, n=2 per role, and 1 GPU per role. The output cap is reduced from 4,096 to 1,024 tokens. Conclusions apply to this fixed-budget study; they do not claim reproduction of the paper's absolute scores.
 
-## 验收依据
+## Validation evidence
 
-第 1–2 周的作业 6888089 已跑通完整更新，两个 actor 的梯度范数分别为 2.010、2.977。新增执行反馈在 `artifacts/setup/feedback-check.json` 中验证了部分/完整分支覆盖与返回时局部变量；`study-evaluation-check.json` 验证了错误断言剔除、已知变异体检出以及完整分支覆盖。后续 32-step 训练与评测结果以对应作业、checkpoint、逐题 JSONL 和最终报告为准。
+Weeks 1–2 job 6888089 completed a full update with actor gradient norms of 2.010 and 2.977. `artifacts/setup/feedback-check.json` validates partial/full branch coverage and return-time locals for the execution feedback. `study-evaluation-check.json` validates rejection of an incorrect assertion, detection of known mutants, and complete branch coverage. The subsequent 32-step training and evaluation are supported by the corresponding jobs, checkpoints, per-task JSONL records, and final report.
