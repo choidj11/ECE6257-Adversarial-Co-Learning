@@ -184,7 +184,7 @@ Actual allocation was 3.866 GPU-hours. The eight final HF models occupy 52.96 Gi
 
 ## W&B training monitoring
 
-Cloud readback passed; see `artifacts/study/wandb-final-verified.json`. All four arms have 32 steps of dual-model loss, final evaluation values match for all five variants, and artifacts contain only configuration and numeric summaries. The monitor and final upload jobs exited successfully.
+Cloud readback passed; see `artifacts/study/wandb-final-verified.json`. All four arms have 32 steps of dual-model loss, final evaluation values match for all five variants, and artifacts contain only configuration and numeric metric records. The monitor and final upload jobs exited successfully.
 
 The user authorized only numeric training metrics, configurations, resource monitoring, and aggregate evaluation summaries. The project is [6257-adversarial-co-training](https://wandb.ai/mushroom_yeren/6257-adversarial-co-training/workspace). Each training arm has a separate run; base is retained as the evaluation control.
 
@@ -201,3 +201,13 @@ sbatch scripts/wandb_monitor.sbatch online
 ```
 
 For local W&B-format records only, use `sbatch scripts/wandb_monitor.sbatch offline`; it does not upload to the cloud. Do not run multiple online monitors against the same runs. The initial cloud check is `artifacts/study/wandb-verified.json`; ongoing state is `artifacts/study/wandb-status.json`.
+
+### Reading charts and diagnosing missing data
+
+Training curves are `actor_a/pg_loss` (coder) and `actor_b2/pg_loss` (tester), plotted against `train_step`. Select E0–E3 to see their 32 recorded steps. The untrained `base` run has evaluation results but no training-loss curve.
+
+`training/completed_steps` is a progress counter. New monitoring logs it with each training step. For the original study, its repaired historical record is a final observation at step 32; `base` records zero completed training steps. Final `eval/*`, `loss/*_policy_final`, compute, storage, and feedback summaries are also final observations, not measurements taken at every training step. Use the Runs table or bar charts to compare final scores across variants.
+
+A numeric value in `run.summary` alone does not populate a history line chart. A custom-axis chart requires the metric and its `train_step` in the same history row. The final publisher therefore logs both through `run.log()` in addition to updating summary. `scripts/publish_wandb_summary.py` resumes the existing runs and appends a missing final row only once; it does not replay the original loss histories. Re-run it with `sbatch scripts/publish_wandb_summary.sbatch` when final metrics need publishing. It uses CPU resources only and verifies aligned history points, matching summary values, preserved original losses, and the approved artifact scope. Results are recorded in `artifacts/study/wandb-final-verified.json`.
+
+Verification queries the live sampled-history interface used by charts because full archived snapshots can lag resumed runs. Original loss comparisons bypass the SDK history cache and ignore null fields in sparse evaluation rows. W&B-generated `wandb-history` Parquet artifacts are accepted only for the matching run and after verifying numeric column types; these are metric archives, not uploaded benchmark data or model weights.

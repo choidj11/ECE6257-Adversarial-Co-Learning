@@ -146,7 +146,7 @@ try:
                                    config=config,mode=mode,reinit='create_new',resume='allow' if mode=='online' else None,
                                    dir=str(ROOT/'artifacts/wandb'),
                                    settings=wandb.Settings(init_timeout=60,x_disable_stats=True,disable_git=True))
-                    run.define_metric('train_step')
+                    run.define_metric('train_step',hidden=True)
                     run.define_metric('*',step_metric='train_step')
                     runs[variant]=run
                     last_steps[variant]=0
@@ -157,13 +157,15 @@ try:
                     for step,values in sorted(metrics_for(variant,jobs['training'][variant]).items()):
                         if step<=last_steps[variant] or not all(f'actor_{role}/grad_norm' in values for role in ('a','b2')):
                             continue
-                        run.log({'train_step':step,**values})
+                        run.log({'train_step':step,'training/completed_steps':step,
+                                 'logged_train_steps':step,**values})
                         last_steps[variant]=step
-                    run.summary['logged_train_steps']=last_steps[variant]
                 metrics_path=STUDY/variant/'metrics.json'
                 if metrics_path.exists() and variant not in logged_evaluation:
                     result=json.loads(metrics_path.read_text())
-                    run.log({'train_step':last_steps.get(variant,0),**flattened(result)})
+                    run.log({'train_step':last_steps.get(variant,0),
+                             'training/completed_steps':last_steps.get(variant,0),
+                             'logged_train_steps':last_steps.get(variant,0),**flattened(result)})
                     run.summary.update(flattened(result))
                     upload_data(run,variant,include_text=options.get('scope')=='text' and target_authorized)
                     logged_evaluation.add(variant)
