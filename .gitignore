@@ -1,3 +1,41 @@
+# Downloaded models, datasets, benchmark assets, and upstream repositories
+/models/
+/data/
+/datasets/
+/benchmarks/
+/external/
+
+# Training, evaluation, and scheduler output
+/artifacts/
+/checkpoints/
+/outputs/
+/results/
+/runs/
+/logs/
+/wandb/
+/ray_results/
+/slurm-*.out
+/slurm-*.err
+
+# Model weights and binary dataset shards, including accidental copies elsewhere
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.onnx
+pytorch_model*.bin
+optimizer*.bin
+*.parquet
+*.arrow
+
+# Local environments, downloaded tools, caches, and credentials
+/.tools/
+/.local/
+/.config/
+/.venv-*/
+/.cache/
+/.aws/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -136,6 +174,10 @@ celerybeat.pid
 
 # Environments
 .env
+.env.*
+!.env.example
+!.env.template
+/.netrc
 .envrc
 .venv
 env/
