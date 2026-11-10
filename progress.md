@@ -231,6 +231,8 @@ Append dated facts, evidence, and next steps. Do not present planned experiments
 | 2026-11-09 | T0, T6 | Translated repository Markdown and automatic report/progress output into English for the team; retained original Chinese documents locally under Git-ignored local-docs/zh-CN/ | Documentation language updated; experimental values and evidence preserved | Maintain repository documentation in English |
 | 2026-11-09 | T6 | Fixed empty W&B charts caused by summary-only final metrics. Final publishing now logs aligned train_step/history rows, checks live chart queries, preserves original losses, and validates numeric internal history archives; CPU repair job 6906571 | `DONE`: all five runs have chart-readable final metrics, each trained variant retains 32 loss steps per model, and no public numeric summary-only metrics remain; wandb-final-verified.json | Refresh the workspace; use E0–E3 for training curves and final observations for score comparisons |
 
+| 2026-11-09 | T0, T6 | Copied metrics to private team project 6257-final-proj/6257-adversarial-co-training; original personal project retained. Upload job 6911386 completed the copy but failed its initial check on summary propagation; verification now waits for both chart history and summary. Final CPU job 6911407 passed | `DONE`: wandb-team-final-verified.json verifies five runs, 32 dual-loss steps per trained arm, matching final scores, plot-ready numeric metrics, and approved artifact scope; no GPU training repeated | Use the team project link in README; inspect partial destinations before attempting another backfill |
+
 ### Future update rules
 
 - After completing work, update the sub-task's state, evidence, and next step, and its parent's status.

@@ -5,7 +5,7 @@ Reproduce Code-A1's adversarial coder–tester co-training and evaluate how bran
 - [Progress and seven-week plan](progress.md)
 - [Study results and final report](FINAL_REPORT.md) (resource-limited, 32 steps, one seed)
 - [Environment, data, Slurm, and operating instructions](ENVIRONMENT.md)
-- [W&B training and evaluation metrics](https://wandb.ai/mushroom_yeren/6257-adversarial-co-training/workspace) (private project)
+- [W&B training and evaluation metrics](https://wandb.ai/6257-final-proj/6257-adversarial-co-training/workspace) (private team project)
 
 Repository documentation and generated reports are maintained in English.
 

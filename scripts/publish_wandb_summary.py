@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Publish numeric finals to both history and summary; verify plot-ready readback."""
+import argparse
 import json
 import math
 import os
@@ -14,7 +15,11 @@ import wandb
 
 root=Path(__file__).resolve().parents[1]
 study=root/'artifacts/study'
-config=json.loads((study/'wandb-config.json').read_text())
+parser=argparse.ArgumentParser()
+parser.add_argument('--target-config',type=Path,default=study/'wandb-config.json')
+parser.add_argument('--verification-file',type=Path,default=study/'wandb-final-verified.json')
+args=parser.parse_args()
+config=json.loads(args.target_config.read_text())
 assert config.get('authorized') is True and config.get('scope')=='metrics'
 os.environ['WANDB_API_KEY']=dotenv_values(root/'.env')['WANDB_API_KEY']
 os.environ['WANDB_MODE']='online';os.environ['WANDB_ERROR_REPORTING']='false'
@@ -98,11 +103,13 @@ for variant in ('base','E0','E1','E2','E3'):
             writer.summary.update(payload)
 
     # Verify through the same sampled-history interface used for line charts.
-    for attempt in range(30):
+    for attempt in range(60):
         actual=wandb.Api(timeout=30).run(path)
         plotted_after=actual.history(keys=plot_keys,x_axis='train_step',pandas=False,samples=1000)
-        if any(matches(row) for row in plotted_after):break
-        if attempt==29:raise AssertionError((variant,'final metrics missing aligned chart history'))
+        # History and summary become visible independently after a new upload.
+        summary_ready=matches(dict(actual.summary))
+        if any(matches(row) for row in plotted_after) and summary_ready:break
+        if attempt==59:raise AssertionError((variant,'final history or summary not yet available'))
         time.sleep(2)
     history_after=list(actual.scan_history(use_cache=False))
     for key,value in payload.items():
@@ -163,5 +170,5 @@ for variant in ('base','E0','E1','E2','E3'):
                       'remaining_summary_only_numeric_metrics':summary_only,
                       'chart_query_points':plot_counts,'internal_numeric_history_artifacts':internal_histories})
     print(f'{variant}: final history and chart queries verified; loss steps={loss_steps}',flush=True)
-(study/'wandb-final-verified.json').write_text(json.dumps({'passed':True,'runs':published},indent=2)+'\n')
+args.verification_file.write_text(json.dumps({'passed':True,'runs':published},indent=2)+'\n')
 print(json.dumps({'passed':True,'runs':published},indent=2))

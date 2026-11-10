@@ -25,6 +25,8 @@ parser=argparse.ArgumentParser()
 parser.add_argument('--mode',choices=['auto','online','offline'],default='auto')
 parser.add_argument('--poll-seconds',type=float,default=30)
 parser.add_argument('--max-hours',type=float,default=4)
+parser.add_argument('--target-config',type=Path,default=STUDY/'wandb-config.json')
+parser.add_argument('--status-file',type=Path,default=STUDY/'wandb-status.json')
 args=parser.parse_args()
 
 
@@ -114,7 +116,7 @@ mode=None
 try:
     while True:
         jobs=json.loads((STUDY/'jobs.json').read_text())
-        options_path=STUDY/'wandb-config.json'
+        options_path=args.target_config
         options=json.loads(options_path.read_text()) if options_path.exists() else {}
         target_authorized=(options.get('authorized') is True and bool(options.get('entity'))
                            and bool(options.get('project')) and options.get('scope') in ('metrics','text'))
@@ -145,7 +147,8 @@ try:
                                    job_type='evaluation' if variant=='base' else 'training',
                                    config=config,mode=mode,reinit='create_new',resume='allow' if mode=='online' else None,
                                    dir=str(ROOT/'artifacts/wandb'),
-                                   settings=wandb.Settings(init_timeout=60,x_disable_stats=True,disable_git=True))
+                                   settings=wandb.Settings(init_timeout=60,x_disable_stats=True,
+                                                          disable_git=True,save_code=False,console='off'))
                     run.define_metric('train_step',hidden=True)
                     run.define_metric('*',step_metric='train_step')
                     runs[variant]=run
@@ -173,7 +176,7 @@ try:
         status.update({'project':project,'entity':entity,'mode':mode,
                        'updated_at':datetime.now(timezone.utc).isoformat(),
                        'last_train_steps':last_steps,'evaluation_uploaded':sorted(logged_evaluation)})
-        (STUDY/'wandb-status.json').write_text(json.dumps(status,indent=2)+'\n')
+        args.status_file.write_text(json.dumps(status,indent=2)+'\n')
         if complete or timed_out:
             break
         time.sleep(args.poll_seconds)
@@ -189,5 +192,5 @@ if mode=='online':
 elif mode=='offline':
     status['state']='offline_ready'
 status['finished_at']=datetime.now(timezone.utc).isoformat()
-(STUDY/'wandb-status.json').write_text(json.dumps(status,indent=2)+'\n')
+args.status_file.write_text(json.dumps(status,indent=2)+'\n')
 print(json.dumps(status,indent=2))

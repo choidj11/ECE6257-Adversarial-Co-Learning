@@ -196,7 +196,7 @@ Actual allocation was 3.866 GPU-hours. The eight final HF models occupy 52.96 Gi
 
 Cloud readback passed; see `artifacts/study/wandb-final-verified.json`. All four arms have 32 steps of dual-model loss, final evaluation values match for all five variants, and artifacts contain only configuration and numeric metric records. The monitor and final upload jobs exited successfully.
 
-The user authorized only numeric training metrics, configurations, resource monitoring, and aggregate evaluation summaries. The project is [6257-adversarial-co-training](https://wandb.ai/mushroom_yeren/6257-adversarial-co-training/workspace). Each training arm has a separate run; base is retained as the evaluation control.
+The user authorized only numeric training metrics, configurations, resource monitoring, and aggregate evaluation summaries. The team project is [6257-final-proj/6257-adversarial-co-training](https://wandb.ai/6257-final-proj/6257-adversarial-co-training/workspace). The [original personal project](https://wandb.ai/mushroom_yeren/6257-adversarial-co-training/workspace) is retained. Each training arm has a separate run; base is retained as the evaluation control.
 
 `scripts/wandb_monitor.py` reads persistent records every 30 seconds in a separate CPU job, backfills earlier steps, and streams metrics to W&B without restarting GPU training for authentication or network delays. Metrics include `actor_a/pg_loss`, `actor_b2/pg_loss`, KL, entropy, rewards, gradient norms, token lengths, execution time, and memory. It adds pass@1, coverage, and bounded mutation summaries as evaluations finish. This study's original console-only metrics have three-decimal precision; earlier lost precision cannot be recovered. Future structured streams through `metrics_tracking.py` can preserve full precision. A learning rate rounded to zero on the console does not mean the actual rate was zero; the initial configuration is 1e-6.
 
@@ -211,6 +211,24 @@ sbatch scripts/wandb_monitor.sbatch online
 ```
 
 For local W&B-format records only, use `sbatch scripts/wandb_monitor.sbatch offline`; it does not upload to the cloud. Do not run multiple online monitors against the same runs. The initial cloud check is `artifacts/study/wandb-verified.json`; ongoing state is `artifacts/study/wandb-status.json`.
+
+### Copying completed metrics to another team
+
+The requested Forge URL `https://forge.coreweave.com/wandb/6257-final-proj` identifies the `6257-final-proj` team. It initially contained no projects, so a private project with the original study's name was created there. Its configuration, upload state, and verification evidence are separate from those of the personal project: `wandb-team-config.json`, `wandb-team-status.json`, and `wandb-team-final-verified.json` under `artifacts/study/`.
+
+All five team runs passed cloud verification on November 9, 2026. E0–E3 each retain 32 loss steps for both roles, and final evaluation fields match the local analysis and are readable through live chart queries. Copy job 6911386 uploaded the data but its initial check encountered a lagging summary; final publication and verification job 6911407 completed successfully. Both jobs used CPU resources only.
+
+For an additional authorized, empty destination, use separate output paths:
+
+```bash
+source scripts/activate.sh rl
+python scripts/configure_wandb.py --entity TEAM --project PROJECT \
+  --config-file artifacts/study/wandb-copy-config.json
+sbatch scripts/copy_wandb_study.sbatch artifacts/study/wandb-copy-config.json \
+  artifacts/study/wandb-copy-status.json artifacts/study/wandb-copy-verified.json
+```
+
+The CPU-only copy job refuses a destination containing runs to prevent replaying existing histories. It backfills the recorded training curves, publishes final metrics with `train_step`, and verifies live chart queries and artifact scope. A partial copy needs inspection before resuming; do not rerun the monitor blindly. The final publisher can safely be rerun with `--target-config` and `--verification-file` for the selected destination. No GPU training is repeated.
 
 ### Reading charts and diagnosing missing data
 
