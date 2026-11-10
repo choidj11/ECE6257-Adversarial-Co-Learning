@@ -10,4 +10,4 @@
 set -euo pipefail
 cd "${SLURM_SUBMIT_DIR:?}"
 source scripts/activate.sh rl
-python -u scripts/publish_wandb_summary.py
+python -u scripts/publish_wandb_summary.py "$@"
