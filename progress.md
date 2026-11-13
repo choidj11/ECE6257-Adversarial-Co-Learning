@@ -1,9 +1,11 @@
 # Adversarial Co-Training — Progress Tracker
 
-> Last updated: 2026-11-09 (America/New_York)<br>
+> Last updated: 2026-11-13 (America/New_York)<br>
 > Project: Adversarial Co-Training for Agentic Coding<br>
 > Team: Daniel Choi, Jack Li, Muyu Pan, Tianyou Zhao<br>
 > Plan source: [Adversarial Co-Training .pdf](<Adversarial Co-Training .pdf>), 3 pages.
+
+Current follow-up completed: the original LFM3-1.7B checkpoint was evaluated as coder/tester with no training, first on a 128-task feasibility subset and then on the full HumanEval, BigCodeBench, and ULT Lite benchmarks. W&B was disabled; local evidence and job IDs are in `artifacts/lfm3-evaluation/`. Historical Qwen weights/checkpoints were removed at the user's request; results and reports remain available. See [the inference report](LFM3_EVALUATION.md).
 
 ## 1. Goals and Research Hypothesis
 
@@ -232,6 +234,14 @@ Append dated facts, evidence, and next steps. Do not present planned experiments
 | 2026-11-09 | T6 | Fixed empty W&B charts caused by summary-only final metrics. Final publishing now logs aligned train_step/history rows, checks live chart queries, preserves original losses, and validates numeric internal history archives; CPU repair job 6906571 | `DONE`: all five runs have chart-readable final metrics, each trained variant retains 32 loss steps per model, and no public numeric summary-only metrics remain; wandb-final-verified.json | Refresh the workspace; use E0–E3 for training curves and final observations for score comparisons |
 
 | 2026-11-09 | T0, T6 | Copied metrics to private team project 6257-final-proj/6257-adversarial-co-training; original personal project retained. Upload job 6911386 completed the copy but failed its initial check on summary propagation; verification now waits for both chart history and summary. Final CPU job 6911407 passed | `DONE`: wandb-team-final-verified.json verifies five runs, 32 dual-loss steps per trained arm, matching final scores, plot-ready numeric metrics, and approved artifact scope; no GPU training repeated | Use the team project link in README; inspect partial destinations before attempting another backfill |
+
+| 2026-11-09 | Follow-up | User requested original LFM3-1.7B inference only on HumanEval, BigCodeBench, and ULT Lite, first 128 tasks and then full evaluation if runnable; W&B explicitly disabled. Removed Qwen model cache and eight checkpoint trees (55.97 GiB by file size), retaining historical evidence. Fixed inference compatibility using Python 3.11/Transformers 5.22.2 and materialized custom Python files | `IN_PROGRESS`: small generation 6916897 resumes 24 saved outputs from cancelled batch-8 job 6916788; small scoring/gate 6916789, full generation 6916790, full scoring 6916791, report 6916792; no training jobs | Check the feasibility gate, full metric denominators, resource totals including cancelled allocation, and local-only report |
+
+| 2026-11-10 | Follow-up | The 128-task feasibility gate passed: HumanEval 22/32, BigCodeBench 18/64, ULT Lite 47 valid assertions/265 submitted, 24/128 bounded mutants killed. Full generation resumed at batch 32 as job 6917133 after a batch-64 attempt, preserving 224 coder outputs. CPU overlap attempt 6916791 failed because Slurm retained the old non-streaming wrapper snapshot; fresh streaming scorer 6917285 is running and report 6916792 depends on it | `IN_PROGRESS`: full generations and scores accumulating locally; all attempts retained in jobs.json; W&B disabled; no parameter updates | Complete all 1304 coder tasks and 200 tester tasks, verify final denominators and GPU accounting, and generate the English report |
+
+| 2026-11-10 | Follow-up | Completed inference-only LFM3 evaluation: HumanEval 106/164 (64.63%), BigCodeBench Instruct 290/1140 (25.44%; qualified 288/1087, 26.49%), ULT Lite validity 383/1717 (22.31%), mean branch coverage 21.74%, bounded mutation score 180/783 (22.99%). All 200 tester functions attempted; 197 measured, 3 whole-function timeouts at 120 seconds | `DONE`: full generation 6917133, scoring 6917285, report 6916792 all COMPLETED/0:0; final-verification.json checks unique/full task coverage, metric aggregates, exact subset reuse, dataset/reference/source hashes, and Qwen removal. Total 0.8731 GPU-hours including cancelled attempts; Scratch 213.95/300 GiB, 86.05 GiB free; zero parameter updates, W&B disabled | Completed requested scope; results and Chinese report copy remain local |
+
+| 2026-11-13 | Follow-up | Prepared the verified LFM3 report, aggregate JSON, evaluation scripts, and pinned dependencies for publication to team main. Repository Markdown remains English; Chinese copies, datasets, raw generations, per-task logs, environments, and model files stay local | Report scores and exported JSON match the completed 128-task/full-run evidence; existing final verification passed; no evaluation rerun or W&B upload | Use LFM3_EVALUATION.md and report/lfm3/summary.json; retain raw experiment files locally |
 
 ### Future update rules
 
