@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "model_id": "LiquidAI/LFM3-1.7B",
+  "model_revision": "1da06bec6a819da10b54c67e5c90972b46d81871",
+  "evaluation_completed_at": "2026-11-10T05:38:17.401713+00:00",
+  "mode": "inference_only",
+  "training_steps": 0,
+  "wandb_mode": "disabled",
+  "protocol": {
+    "seed": 42,
+    "context_tokens": 16384,
+    "max_new_tokens": 2048,
+    "batch_size": 32,
+    "full_batch_size": 32,
+    "do_sample": true,
+    "temperature": 0.1,
+    "top_k": 50,
+    "top_p": 1.0,
+    "repetition_penalty": 1.1,
+    "enable_thinking": false,
+    "dtype": "bfloat16",
+    "attention_implementation": "sdpa",
+    "coder_samples_per_task": 1,
+    "tester_queries": 2,
+    "assertions_per_query": 8,
+    "small_counts": {
+      "HumanEval": 32,
+      "BigCodeBench": 64,
+      "ULT_Lite": 32
+    },
+    "full_counts": {
+      "HumanEval": 164,
+      "BigCodeBench": 1140,
+      "ULT_Lite": 200
+    },
+    "benchmark_variants": {
+      "HumanEval": "Original OpenAI HumanEval tests, not HumanEval+",
+      "BigCodeBench": "v0.1.4 Instruct, full 1140 tasks",
+      "ULT_Lite": "200-task bounded assertion/AST-mutation adaptation"
+    },
+    "dataset_sha256": {
+      "HumanEval": "2f2871a15fbc95b6c683043359f4ed8e144c5a1c4f24f25f66bc51f598dfcfb6",
+      "BigCodeBench": "d9a4965821c9507ebdfb551c288656b2d5fe553234f5183044333ca8a4018267",
+      "ULT_Lite": "76e023e49b3659f224ab64af56cee783212eff50ac405008976a72c37f02724c"
+    },
+    "reference_calibration_sha256": "29ac2c2b7030c72d27309eea9241167da515f69558ac5056859ac26427f9d126",
+    "limitations": [
+      "Fixed untrained checkpoint used separately for coder and tester benchmark tasks; no co-training or inference-time repair.",
+      "One sampled coder response per task and one seed; pass@1 is not a repeated-sampling estimate.",
+      "ULT Lite uses up to four deterministic AST mutants per function, not the official full Cosmic Ray evaluation.",
+      "The prior Qwen study used different generation settings; this is not a controlled model comparison.",
+      "Full evaluation reuses feasibility outputs on the same tasks and settings to avoid duplicate GPU work."
+    ]
+  },
+  "results": {
+    "small": {
+      "completed_at": "2026-11-10T04:48:44.615279+00:00",
+      "variant": "LFM3-1.7B-small",
+      "coder": {
+        "HumanEval": {
+          "tasks": 32,
+          "reference_qualified_tasks": 32,
+          "passed_all_tasks": 22,
+          "passed_qualified_tasks": 22,
+          "raw_pass_at_1": 0.6875,
+          "qualified_pass_at_1": 0.6875
+        },
+        "BigCodeBench": {
+          "tasks": 64,
+          "reference_qualified_tasks": 62,
+          "passed_all_tasks": 18,
+          "passed_qualified_tasks": 18,
+          "raw_pass_at_1": 0.28125,
+          "qualified_pass_at_1": 0.2903225806451613
+        }
+      },
+      "tester": {
+        "tasks": 32,
+        "measured_tasks": 32,
+        "submitted_tests": 265,
+        "valid_tests": 47,
+        "valid_test_fraction": 0.17735849056603772,
+        "measurement_failures": 0,
+        "valid_tests_per_query": 0.734375,
+        "killed_mutants_per_query": 0.375,
+        "mutants": 128,
+        "killed_mutants": 24,
+        "bounded_mutation_score": 0.1875,
+        "mean_branch_coverage": 0.1752141955266955,
+        "mean_line_coverage": 0.21507822122826092,
+        "protocol": "ULT Lite 32, K=2, up to 8 assertions/query; max 4 deterministic AST mutants/FUT; not official Cosmic-Ray score."
+      },
+      "tokens": {
+        "coder": {
+          "prompt_tokens": 15476,
+          "generated_tokens": 74092
+        },
+        "tester": {
+          "prompt_tokens": 50711,
+          "generated_tokens": 42572
+        }
+      }
+    },
+    "full": {
+      "completed_at": "2026-11-10T05:38:17.401713+00:00",
+      "variant": "LFM3-1.7B-full",
+      "coder": {
+        "HumanEval": {
+          "tasks": 164,
+          "reference_qualified_tasks": 164,
+          "passed_all_tasks": 106,
+          "passed_qualified_tasks": 106,
+          "raw_pass_at_1": 0.6463414634146342,
+          "qualified_pass_at_1": 0.6463414634146342
+        },
+        "BigCodeBench": {
+          "tasks": 1140,
+          "reference_qualified_tasks": 1087,
+          "passed_all_tasks": 290,
+          "passed_qualified_tasks": 288,
+          "raw_pass_at_1": 0.2543859649122807,
+          "qualified_pass_at_1": 0.26494940202391903
+        }
+      },
+      "tester": {
+        "tasks": 200,
+        "measured_tasks": 197,
+        "submitted_tests": 1717,
+        "valid_tests": 383,
+        "valid_test_fraction": 0.22306348281887012,
+        "measurement_failures": 3,
+        "valid_tests_per_query": 0.9575,
+        "killed_mutants_per_query": 0.45,
+        "mutants": 783,
+        "killed_mutants": 180,
+        "bounded_mutation_score": 0.22988505747126436,
+        "mean_branch_coverage": 0.21740785892169398,
+        "mean_line_coverage": 0.2689533253000244,
+        "protocol": "ULT Lite 200, K=2, up to 8 assertions/query; max 4 deterministic AST mutants/FUT; not official Cosmic-Ray score."
+      },
+      "tokens": {
+        "coder": {
+          "prompt_tokens": 234455,
+          "generated_tokens": 865224
+        },
+        "tester": {
+          "prompt_tokens": 355035,
+          "generated_tokens": 284870
+        }
+      }
+    }
+  },
+  "generation_diagnostics": {
+    "small": {
+      "coder": {
+        "outputs": 96,
+        "length_limited": 13,
+        "empty_outputs": 0
+      },
+      "tester": {
+        "outputs": 64,
+        "length_limited": 8,
+        "empty_outputs": 0
+      }
+    },
+    "full": {
+      "coder": {
+        "outputs": 1304,
+        "length_limited": 127,
+        "empty_outputs": 0
+      },
+      "tester": {
+        "outputs": 400,
+        "length_limited": 53,
+        "empty_outputs": 0
+      }
+    }
+  },
+  "gpu_hours_including_cancelled_attempts": 0.8730555555555556,
+  "verification": {
+    "passed": true,
+    "stages": {
+      "small": {
+        "coder_tasks": 96,
+        "tester_tasks": 32,
+        "unique_records": true,
+        "aggregate_metrics_match": true
+      },
+      "full": {
+        "coder_tasks": 1304,
+        "tester_tasks": 200,
+        "unique_records": true,
+        "aggregate_metrics_match": true
+      }
+    },
+    "subset_generations_and_results_reused_exactly": true,
+    "qwen_weights_removed": true,
+    "lfm_model_and_source_verified": true,
+    "training_steps": 0,
+    "wandb_mode": "disabled",
+    "benchmark_and_reference_hashes_unchanged": true
+  }
+}

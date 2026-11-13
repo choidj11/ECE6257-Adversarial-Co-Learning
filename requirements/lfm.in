@@ -1,0 +1,6 @@
+# Inference only; keep the historical RL/sandbox environments separate.
+torch==2.6.0
+transformers==5.22.2
+accelerate>=1.12
+pyarrow
+setuptools

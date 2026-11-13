@@ -2,12 +2,17 @@
 
 Reproduce Code-A1's adversarial coder–tester co-training and evaluate how branch coverage and selected runtime values affect test quality and code generation.
 
+- [LFM3-1.7B inference-only results](LFM3_EVALUATION.md) (128-task feasibility and full benchmarks completed; W&B disabled)
 - [Progress and seven-week plan](progress.md)
 - [Study results and final report](FINAL_REPORT.md) (resource-limited, 32 steps, one seed)
 - [Environment, data, Slurm, and operating instructions](ENVIRONMENT.md)
 - [W&B training and evaluation metrics](https://wandb.ai/6257-final-proj/6257-adversarial-co-training/workspace) (private team project)
 
 Repository documentation and generated reports are maintained in English.
+
+The inference-only follow-up is complete: LFM3 scores 106/164 (64.63%) on HumanEval and 290/1140 (25.44%) on BigCodeBench Instruct. The ULT Lite bounded adaptation reports 21.74% mean branch coverage and 22.99% mutation detection, with 197/200 functions measured. Historical Qwen weights/checkpoints were removed at the user's request; their numeric results and reports remain available.
+
+Use `source scripts/activate.sh lfm` for current model inference. Sandbox scoring continues to use the existing evaluation environment; setup and submission commands are in the [environment guide](ENVIRONMENT.md).
 
 This team repository retains the original Code-A1 source in `Code-A1/` and project website in `docs/`. See [UPSTREAM_README.md](UPSTREAM_README.md) for the original setup, training, and paper results. The PACE study scripts use a separately pinned checkout at `external/Code-A1` for reproducibility; prepare source checkouts as described in [ENVIRONMENT.md](ENVIRONMENT.md).
 

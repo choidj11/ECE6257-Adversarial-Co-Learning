@@ -192,7 +192,32 @@ CPU evaluation reused the full `.venv-rl` dependencies inside Bubblewrap, with a
 
 Actual allocation was 3.866 GPU-hours. The eight final HF models occupy 52.96 GiB. Final Scratch usage was 263.9/300 GiB, leaving 36.1 GiB, with 896,514/1,000,000 files. This is the quota for the user's entire Scratch space; 210.7 GiB was the pre-training snapshot.
 
+## LFM3 inference-only follow-up
+
+The current follow-up uses the original `LiquidAI/LFM3-1.7B` checkpoint as both coder and tester, without any training. It first evaluates 128 tasks (32 HumanEval, 64 BigCodeBench, 32 ULT Lite), then runs the full benchmarks after an infrastructure/usable-output gate. W&B is disabled. The original Qwen model cache and eight trained checkpoint directories were deleted at the user's request; historical results were preserved. See [the LFM3 report](LFM3_EVALUATION.md).
+
+Inference has its own `.venv-lfm` with Python 3.11.9 and `requirements/lfm.lock`; evaluation reuses `.venv-rl` inside the existing isolated sandbox. The pinned model's custom Python files are materialized together in `models/LFM3-1.7B` to avoid Transformers resolving their relative imports into Hub blob paths. Weights and tokenizer files remain linked to one local cache copy. Model revision and source hashes are recorded under `artifacts/lfm3-evaluation/`.
+
+In a fresh workspace with benchmark data and the sandbox already prepared:
+
+```bash
+source scripts/env.sh
+module load python/3.11.9
+.tools/bin/uv venv .venv-lfm --python "$(command -v python)"
+.tools/bin/uv pip install --python .venv-lfm/bin/python -r requirements/lfm.lock
+source scripts/activate.sh lfm
+python scripts/download_lfm_model.py
+python scripts/prepare_lfm_evaluation.py
+python scripts/submit_lfm_evaluation.py
+```
+
+Preparation/submission refuse to overwrite existing protocol/job records. Full inference reuses completed subset generations, and full scoring reuses subset results. Generation runs in `coe-gpu` with one GPU; scoring and report jobs use CPU resources. Inference batches halve on CUDA allocation failure. The report accounts for cancelled GPU attempts as well as successful allocations. All generated code executes only inside the compute-node sandbox.
+
+The English report and [aggregate result JSON](report/lfm3/summary.json) are shared in the repository. `python scripts/export_lfm_results.py` exports the completed local metrics and verification into that JSON, without including raw prompts, generated code, per-task records, datasets, or weights.
+
 ## W&B training monitoring
+
+The historical Qwen study below remains available in W&B. The newer LFM3 evaluation uses `WANDB_MODE=disabled`; it does not append runs or metrics to either W&B project. Its report and aggregate metrics are shared through Git, while raw experiment files remain local.
 
 Cloud readback passed; see `artifacts/study/wandb-final-verified.json`. All four arms have 32 steps of dual-model loss, final evaluation values match for all five variants, and artifacts contain only configuration and numeric metric records. The monitor and final upload jobs exited successfully.
 
